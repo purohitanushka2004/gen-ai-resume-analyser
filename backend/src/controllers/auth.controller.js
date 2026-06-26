@@ -9,55 +9,48 @@ const tokenBlacklistModel = require("../models/blacklist.model")
  * @access Public
  */
 async function registerUserController(req, res) {
+    try {
 
-    const { username, email, password } = req.body
+        console.log("BODY:", req.body);
 
-    if (!username || !email || !password) {
-        return res.status(400).json({
-            message: "Please provide username, email and password"
-        })
-    }
+        const { username, email, password } = req.body;
 
-    const normalizedEmail = email.toLowerCase().trim()
-
-    const isUserAlreadyExists = await userModel.findOne({
-        $or: [{ username }, { email: normalizedEmail }]
-    })
-
-    if (isUserAlreadyExists) {
-        return res.status(400).json({
-            message: "Account already exists with this email address or username"
-        })
-    }
-
-    const hash = await bcrypt.hash(password, 10)
-
-    const user = await userModel.create({
-        username,
-        email: normalizedEmail,
-        password: hash
-    })
-
-    const token = jwt.sign(
-        { id: user._id, username: user.username },
-        process.env.JWT_SECRET,
-        { expiresIn: "1d" }
-    )
-
-    res.cookie("token", token, {
-        httpOnly: true,
-        sameSite: "lax"
-    })
-
-    res.status(201).json({
-        message: "User registered successfully",
-        user: {
-            id: user._id,
-            username: user.username,
-            email: user.email
+        if (!username || !email || !password) {
+            return res.status(400).json({
+                message: "Please provide username, email and password"
+            });
         }
-    })
 
+        const isUserAlreadyExists = await userModel.findOne({
+            $or: [{ username }, { email }]
+        });
+
+        if (isUserAlreadyExists) {
+            return res.status(400).json({
+                message: "Account already exists with this email address or username"
+            });
+        }
+
+        const hash = await bcrypt.hash(password, 10);
+
+        const user = await userModel.create({
+            username,
+            email,
+            password: hash
+        });
+
+        res.status(201).json({
+            message: "User registered successfully",
+            user
+        });
+
+    } catch (error) {
+        console.log("REGISTER ERROR:", error);
+
+        return res.status(500).json({
+            message: error.message
+        });
+    }
 }
 
 
@@ -70,19 +63,7 @@ async function loginUserController(req, res) {
 
     const { email, password } = req.body
 
-    if (!email || !password) {
-        return res.status(400).json({
-            message: "Please provide email and password"
-        })
-    }
-
-    const normalizedEmail = email.toLowerCase().trim()
-
-    console.log("Login attempt for email:", normalizedEmail)
-
-    const user = await userModel.findOne({ email: normalizedEmail })
-
-    console.log("User found:", user ? user.email : null)
+    const user = await userModel.findOne({ email })
 
     if (!user) {
         return res.status(400).json({
@@ -91,8 +72,6 @@ async function loginUserController(req, res) {
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password)
-
-    console.log("Password valid:", isPasswordValid)
 
     if (!isPasswordValid) {
         return res.status(400).json({
@@ -106,11 +85,7 @@ async function loginUserController(req, res) {
         { expiresIn: "1d" }
     )
 
-    res.cookie("token", token, {
-        httpOnly: true,
-        sameSite: "lax"
-    })
-
+    res.cookie("token", token)
     res.status(200).json({
         message: "User loggedIn successfully.",
         user: {
@@ -150,11 +125,7 @@ async function getMeController(req, res) {
 
     const user = await userModel.findById(req.user.id)
 
-    if (!user) {
-        return res.status(404).json({
-            message: "User not found"
-        })
-    }
+
 
     res.status(200).json({
         message: "User details fetched successfully",

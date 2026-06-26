@@ -13,7 +13,7 @@ async function generateInterViewReportController(req, res) {
 
     try {
 
-        console.log("========== NEW REPORT REQUEST ==========")
+        console.log("========== NEW zREPORT REQUEST ==========")
         console.log("USER:", req.user)
         console.log("FILE:", req.file?.originalname)
         console.log("BODY:", req.body)

@@ -1,23 +1,23 @@
-import React,{useState} from 'react'
+import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router'
 import { useAuth } from '../hooks/useAuth'
 
 const Register = () => {
 
     const navigate = useNavigate()
-    const [ username, setUsername ] = useState("")
-    const [ email, setEmail ] = useState("")
-    const [ password, setPassword ] = useState("")
+    const [username, setUsername] = useState("")
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
 
-    const {loading,handleRegister} = useAuth()
-    
+    const { loading, handleRegister } = useAuth()
+
     const handleSubmit = async (e) => {
         e.preventDefault()
-        await handleRegister({username,email,password})
-        navigate("/")
+        const success = await handleRegister({ username, email, password })
+        if (success) navigate("/")
     }
 
-    if(loading){
+    if (loading) {
         return (<main><h1>Loading.......</h1></main>)
     }
 
